@@ -528,32 +528,31 @@ class CombatModule(object):
                 i += 1
             Utils.update_screen()
 
-            l1 = filter(lambda x:(x[1] > 242 and x[1] < 1070 and x[0] > 180 and x[0] < 955) or (x[1] > 160 and x[1] < 938 and x[0] > 550 and x[0] < 1790), map(lambda x:[x[0] - 3, x[1] - 27], Utils.find_all('enemy/fleet_level', sim - 0.035, useMask=True)))
-            l1 = [x for x in l1 if (not self.filter_blacklist(x, blacklist))]
-            Logger.log_debug("L1: " +str(l1))
-            l2 = filter(lambda x:(x[1] > 242 and x[1] < 1070 and x[0] > 180 and x[0] < 955) or (x[1] > 160 and x[1] < 938 and x[0] > 550 and x[0] < 1790), map(lambda x:[x[0] + 75, x[1] + 110], Utils.find_all('enemy/fleet_1_down', sim)))
-            l2 = [x for x in l2 if (not self.filter_blacklist(x, blacklist))]
-            Logger.log_debug("L2: " +str(l2))
-            l3 = filter(lambda x:(x[1] > 242 and x[1] < 1070 and x[0] > 180 and x[0] < 955) or (x[1] > 160 and x[1] < 938 and x[0] > 550 and x[0] < 1790), map(lambda x:[x[0] + 75, x[1] + 90], Utils.find_all('enemy/fleet_2_down', sim - 0.02)))
-            l3 = [x for x in l3 if (not self.filter_blacklist(x, blacklist))]
-            Logger.log_debug("L3: " +str(l3))
-            l4 = filter(lambda x:(x[1] > 242 and x[1] < 1070 and x[0] > 180 and x[0] < 955) or (x[1] > 160 and x[1] < 938 and x[0] > 550 and x[0] < 1790), map(lambda x:[x[0] + 75, x[1] + 125], Utils.find_all('enemy/fleet_3_up', sim - 0.06)))
-            l4 = [x for x in l4 if (not self.filter_blacklist(x, blacklist))]
-            Logger.log_debug("L4: " +str(l4))
-            l5 = filter(lambda x:(x[1] > 242 and x[1] < 1070 and x[0] > 180 and x[0] < 955) or (x[1] > 160 and x[1] < 938 and x[0] > 550 and x[0] < 1790), map(lambda x:[x[0] + 75, x[1] + 100], Utils.find_all('enemy/fleet_3_down', sim - 0.06)))
-            l5 = [x for x in l5 if (not self.filter_blacklist(x, blacklist))]
-            Logger.log_debug("L5: " +str(l5))
-            l6 = filter(lambda x:(x[1] > 242 and x[1] < 1070 and x[0] > 180 and x[0] < 955) or (x[1] > 160 and x[1] < 938 and x[0] > 550 and x[0] < 1790), map(lambda x:[x[0] + 75, x[1] + 110], Utils.find_all('enemy/fleet_2_up', sim - 0.04)))
-            l6 = [x for x in l6 if (not self.filter_blacklist(x, blacklist))]
-            Logger.log_debug("L6: " +str(l6))
+            # [Resource filename, Similarity tweak value, Mask, [X and Y offsets from found location]]
+            targets = [
+                ["enemy/fleet_level",  0.035, True,  [-3, -27]],
+                ["enemy/fleet_1_down", 0,     False, [75, 110]],
+                ["enemy/fleet_2_down", 0.02,  False, [75, 90]],
+                ["enemy/fleet_3_up",   0.06,  False, [75, 125]],
+                ["enemy/fleet_3_down", 0.06,  False, [75, 100]],
+                ["enemy/fleet_2_up",   0.04,  False, [75, 110]],
+                ]
+
+            self.l.clear()
+            filter_lambda = lambda x:(x[1] > 242 and x[1] < 1070 and x[0] > 180 and x[0] < 955) or (x[1] > 160 and x[1] < 938 and x[0] > 550 and x[0] < 1790)
+
+            for target in targets:
+                ll = filter(filter_lambda, map(lambda x:[x[0] + target[3][0], x[1] + target[3][1]], Utils.find_all(target[0], sim - target[1], useMask=target[2])))
+                ll = [x for x in ll if (not self.filter_blacklist(x, blacklist))]
+                if ll:
+                  self.l.extend(ll)
+                  Logger.log_debug("Target " + repr(target[0]) + ": " + str(ll))
 
             if self.config.combat['siren_elites']:
                 l7 = Utils.find_siren_elites()
                 l7 = [x for x in l7 if (not self.filter_blacklist(x, blacklist))]
-                Logger.log_debug("L7: " +str(l7))
-                self.l = l1 + l2 + l3 + l4 + l5 + l6 + l7
-            else:
-                self.l = l1 + l2 + l3 + l4 + l5 + l6
+                Logger.log_debug("Target elites: " +str(l7))
+                self.l.extend(l7)
 			
             sim -= 0.005
 
